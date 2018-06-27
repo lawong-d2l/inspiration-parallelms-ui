@@ -13,6 +13,9 @@ export const SirenActionMixin = function(superClass) {
 		}
 
 		getSirenFields(action) {
+			if (!action.fields) {
+				return null;
+			}
 			var url = new URL(action.href, window.location.origin);
 			var fields;
 			if (action.method === 'GET' || action.method === 'HEAD') {
@@ -67,8 +70,14 @@ export const SirenActionMixin = function(superClass) {
 				body: body,
 				headers: headers
 			})
-				.then(function(response) {
-					return EntityStore.update(url.href, token, response);
+				.then(function(res) {
+					if (!res.ok) {
+						throw new Error(`${ res.statusText } response executing ${ action.method } on ${ url.href }.`);
+					}
+					return res.json();
+				})
+				.then(function(json) {
+					return EntityStore.update(url.href, token, json);
 				});
 		}
 	};
